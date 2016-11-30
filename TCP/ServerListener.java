@@ -26,6 +26,7 @@ public class ServerListener extends Thread{
 				DataInputStream dataIn = new DataInputStream(s.getInputStream());
 				/**
 				 * @todo isso aqui tá uma verdadeira gambiarraaa, vou pensar em um melhor jeito pra isso depois
+				 * @todo pensar em um jeito do recebimento do comando + mensagem da maquina cliente
 				 */
 				String comando = dataIn.readUTF();
 				String arrayComando[] = comando.split(" ");
@@ -43,6 +44,9 @@ public class ServerListener extends Thread{
 				case "rename":
 					msg = this.renameUsuario(arrayComando[1]);
 					break;
+
+				case "send":
+					this.sendAll(arrayComando[1]);
 				default:
 					msg = "GZUIZ";
 					break;
@@ -79,6 +83,7 @@ public class ServerListener extends Thread{
 	}
 
 	/**
+	 * @todo caso o usuario só envie o comando rename, retornar um erro para que ele preencha o comando seguido do nome
 	 * @author mayer
 	 * @return String
 	 */
@@ -88,7 +93,7 @@ public class ServerListener extends Thread{
 			this.maquinaCliente.setNome(novoNome);
 			return "Usuário Renomeado com sucesso!";
 		}
-		
+
 		return "Nome de usuário já existente!";
 	}
 	/**
@@ -98,13 +103,39 @@ public class ServerListener extends Thread{
 	 */
 	private boolean isNomeExistente(String novoNome){
 
-		for(MaquinaCliente maquinaCliente: this.maquinasClientes) {
-			
+		for (MaquinaCliente maquinaCliente: this.maquinasClientes) {
+
 			if (maquinaCliente.getNome().equals(novoNome)) {
 				return true;
 			}
 		}
-		
+
 		return false;
+	}
+	/**
+	 * @todo a mensagem formatada terá que seguir este padrão: <IP>:<PORTA>/~<nome_usuario> : <mensagem> <hora-data>
+	 * 192.168.0.123:67890/~ana: Alguma novidade do mini-projeto? 14h31 14/06/2016
+	 * @todo criar validação caso o usuario não mande nenhum texto
+	 * @param mensagem
+	 */
+	public void sendAll(String mensagem) {
+		String mensagemFormatada = this.maquinaCliente.getIp()+
+				":"+
+				this.maquinaCliente.getPorta()+
+				"/~"+
+				this.maquinaCliente.getNome()+
+				":"+
+				mensagem
+				;
+		for (MaquinaCliente maquinaClienteOnline: this.maquinasClientes) {
+			try {
+				if (!maquinaClienteOnline.equals(this.maquinaCliente)) {
+					DataOutputStream dataOutput = new DataOutputStream(maquinaClienteOnline.getSocketCliente().getOutputStream());
+					dataOutput.writeUTF(mensagemFormatada);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }
