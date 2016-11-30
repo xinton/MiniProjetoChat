@@ -15,61 +15,84 @@ public class ServerListener extends Thread{
 
 	public ServerListener(MaquinaCliente maquinaCliente, List<MaquinaCliente> maquinasClientes) {
 		this.maquinaCliente = maquinaCliente;
-		this.s = maquinaCliente.getSocketCliente();
 		this.maquinasClientes = maquinasClientes;
 	}
 
 	public void run(){
 		try {
+
+			DataOutputStream dataOutput = new DataOutputStream(this.maquinaCliente.getSocketCliente().getOutputStream());
 			String msg = "";
 			do{
-				DataInputStream dataIn = new DataInputStream(s.getInputStream());
-				/**
-				 * @todo isso aqui tá uma verdadeira gambiarraaa, vou pensar em um melhor jeito pra isso depois
-				 * @todo pensar em um jeito do recebimento do comando + mensagem da maquina cliente
-				 */
-				String comando = dataIn.readUTF();
-				String arrayComando[] = comando.split(" ");
-				String op = arrayComando[0];
+				DataInputStream dataIn = new DataInputStream(this.maquinaCliente.getSocketCliente().getInputStream());
+				String dadosDoCliente = dataIn.readUTF();
+				String output[] = dadosDoCliente.split(" ");
+				String op = output[0];
 				switch(op){
 				case "bye":
 					msg = "fim";
-					s.close();
+					this.maquinaCliente.getSocketCliente().close();
 					break;
 
 				case "list":
-					msg = listarUsuarios();
+					dataOutput.writeUTF(this.listarUsuarios());
 					break;
-
+					
 				case "rename":
-					msg = this.renameUsuario(arrayComando[1]);
-					break;
+					if (output.length == 1) {
+						dataOutput.writeUTF("Insira um nome de usuário!");
+						break;
+					}
+					String nomeUsuario = dadosDoCliente.substring(7,dadosDoCliente.length());
+					
+					if (!nomeUsuario.trim().contains(" ")) {
+						dataOutput.writeUTF(this.renameUsuario(nomeUsuario));
+						break;
+					}
 
+					if (nomeUsuario.trim().contains(" ")) {
+						dataOutput.writeUTF("Nome de usuario invalido, favor remover espacos em branco que separa os nomes!");
+						break;
+					}
+					
 				case "send":
-					this.sendAll(arrayComando[1]);
+					if (output.length == 1) {
+						dataOutput.writeUTF("Insira o comando '-all' ou '-user'!");
+						break;
+					}
+					if (output.length == 2) {
+						dataOutput.writeUTF("Escreva uma mensagem!");
+						break;
+					}
+					if (dadosDoCliente.substring(5,9).equals("-all")) {
+						this.sendAll(dadosDoCliente.substring(10,dadosDoCliente.length()));
+						break;
+					}
+					/**
+					 * @todo aqui eu limitei que o usuario nao poderia separar seu nome.
+					 */
+					if (dadosDoCliente.substring(5,10).equals("-user")) {
+						String arrayDados[] = dadosDoCliente.substring(11,dadosDoCliente.length()).split(" ");
+						String nome = arrayDados[0];
+						String mensagem = dadosDoCliente.substring(12+nome.length(),dadosDoCliente.length());
+						this.sendUser(nome, mensagem);
+						break;
+					}
+					
 				default:
-					msg = "GZUIZ";
+					dataOutput.writeUTF("Comando inválido!");
 					break;
 				}		
-
-				DataOutputStream dataOutput = new DataOutputStream(s.getOutputStream());
-				//executa alguma coisa... no caso, um eco.
-				dataOutput.writeUTF(msg);
-
-				//				ServerWriter serverwriter = new ServerWriter(s,msg);
-				//				serverwriter.start();
-			}while(!s.isClosed());			
-			s.close();
+			}while(!this.maquinaCliente.getSocketCliente().isClosed());			
+			this.maquinaCliente.getSocketCliente().close();
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	/**
 	 * @author mayer
-	 * @todo Planejar um jeito de jogar esses metodos para o servidor e não para a thread
 	 * @return String
 	 */
 	public String listarUsuarios(){
@@ -83,7 +106,6 @@ public class ServerListener extends Thread{
 	}
 
 	/**
-	 * @todo caso o usuario só envie o comando rename, retornar um erro para que ele preencha o comando seguido do nome
 	 * @author mayer
 	 * @return String
 	 */
@@ -112,6 +134,39 @@ public class ServerListener extends Thread{
 
 		return false;
 	}
+
+	public MaquinaCliente findCliente(String nomeUser) {
+		for (MaquinaCliente maquinaCliente: this.maquinasClientes) {
+
+			if (maquinaCliente.getNome().equals(nomeUser)) {
+				return maquinaCliente;
+			}
+		}
+
+		return null;
+	}
+
+	public void sendUser(String nome, String mensagem) {
+		String mensagemFormatada = this.maquinaCliente.getIp()+
+				":"+
+				this.maquinaCliente.getPorta()+
+				"/~"+
+				this.maquinaCliente.getNome()+
+				":"+
+				mensagem
+				; 
+		MaquinaCliente cliente = this.findCliente(nome);
+
+		if (cliente != null) {
+			try {
+				DataOutputStream dataOutput = new DataOutputStream(cliente.getSocketCliente().getOutputStream());
+				dataOutput.writeUTF(mensagemFormatada);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	/**
 	 * @todo a mensagem formatada terá que seguir este padrão: <IP>:<PORTA>/~<nome_usuario> : <mensagem> <hora-data>
 	 * 192.168.0.123:67890/~ana: Alguma novidade do mini-projeto? 14h31 14/06/2016
