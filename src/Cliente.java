@@ -1,7 +1,7 @@
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -14,8 +14,10 @@ public class Cliente {
 	public static void main(String[] args) {
 		kB = new Scanner(System.in);
 		try {
-			Socket s = new Socket("localhost", 6500);
-			//Socket s = new Socket("10.0.4.100", 6500);
+			//InetAddress address = InetAddress.getByName("198.162.0.105");
+			//Socket s = new Socket(address, 1501);
+			//Socket s = new Socket("localhost", 6500);
+			Socket s = new Socket("192.168.0.105", 6500);
 			Listener lis = new Listener(s);
 			lis.start();
 			DataOutputStream dataOut = new DataOutputStream(s.getOutputStream());

@@ -31,6 +31,7 @@ public class ServerListener extends Thread{
 				switch(op){
 				case "bye":
 					msg = "fim";
+					this.maquinasClientes.remove(this.maquinaCliente);
 					this.maquinaCliente.getSocketCliente().close();
 					break;
 

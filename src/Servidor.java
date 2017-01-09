@@ -7,7 +7,7 @@ import java.util.List;
 
 import model.MaquinaCliente;
 
-public class ServidorTCP {
+public class Servidor {
 	private static List<MaquinaCliente> maquinasClientesOnline = new ArrayList<MaquinaCliente>();
 	public static void main(String[] args) {
 		
@@ -20,7 +20,7 @@ public class ServidorTCP {
 				Socket socket = ss.accept();
 				MaquinaCliente maquinaCliente = new MaquinaCliente(socket);
 				maquinasClientesOnline.add(maquinaCliente);
-				ServerListener serverListener = new ServerListener(maquinaCliente,maquinasClientesOnline);
+				ServerListener serverListener = new ServerListener(maquinaCliente, maquinasClientesOnline);
 				serverListener.start();
 				
 			}while(true);
