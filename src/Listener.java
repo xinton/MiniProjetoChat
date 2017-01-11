@@ -17,8 +17,12 @@ public class Listener extends Thread{
 			String inMsg = "";
 			do{
 				inMsg = dataIn.readUTF();
-				System.out.println("In: "+inMsg);
-			}while(!inMsg.equals("fim"));
+				if(!inMsg.equals("fim")){					
+					System.out.println("In: "+inMsg);
+					System.out.print("Out: ");
+				}else{break;}				
+			}while(!s.isClosed());
+			System.out.println("Chat Finalizado");
 			s.close();
 			
 		} catch (IOException e) {

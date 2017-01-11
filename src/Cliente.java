@@ -16,29 +16,33 @@ public class Cliente {
 		try {
 			//InetAddress address = InetAddress.getByName("198.162.0.105");
 			//Socket s = new Socket(address, 1501);
-			//Socket s = new Socket("localhost", 6500);
-			Socket s = new Socket("192.168.0.105", 6500);
+			Socket s = new Socket("localhost", 6500);
+			//Socket s = new Socket("192.168.0.105", 6500);
 			Listener lis = new Listener(s);
 			lis.start();
 			DataOutputStream dataOut = new DataOutputStream(s.getOutputStream());
-			System.out.println("Nano Mesenger V1.0 (Digite 0 pra sair)");
+			System.out.println("Mini Chat (Digite 'bye' pra sair)");
 			String outMsg = "";
-			do{
-				if(!s.isClosed()){
-					System.out.print("Out: ");
+			System.out.print("Out: ");
+			/*do{
+				if(!s.isClosed()){				
 					outMsg = kB.nextLine();
 					dataOut.writeUTF(outMsg);
 				}
 				else{break;}
-			}while(!outMsg.equals("fim"));
-			s.close();
-			System.out.println("Conversa Finalizada!");
+			}while(!outMsg.equals("fim"));*/
+			do{						
+				outMsg = kB.nextLine();
+				if (!s.isClosed()){
+					dataOut.writeUTF(outMsg);
+				} else {break;}
+				
+			}while(!s.isClosed());
+			//s.close();
+			//System.out.println("Chat Finalizado");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
-		
+		}		
 	}
-
 }

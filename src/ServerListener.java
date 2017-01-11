@@ -2,7 +2,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import model.MaquinaCliente;
@@ -31,6 +34,7 @@ public class ServerListener extends Thread{
 				switch(op){
 				case "bye":
 					msg = "fim";
+					dataOutput.writeUTF(msg);
 					this.maquinasClientes.remove(this.maquinaCliente);
 					this.maquinaCliente.getSocketCliente().close();
 					break;
@@ -148,13 +152,16 @@ public class ServerListener extends Thread{
 	}
 
 	public void sendUser(String nome, String mensagem) {
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss yyyy/MM/dd");
+		Date date = new Date();
 		String mensagemFormatada = this.maquinaCliente.getIp()+
 				":"+
 				this.maquinaCliente.getPorta()+
 				"/~"+
 				this.maquinaCliente.getNome()+
 				":"+
-				mensagem
+				mensagem+
+				" "+dateFormat.format(date)
 				; 
 		MaquinaCliente cliente = this.findCliente(nome);
 
@@ -175,13 +182,17 @@ public class ServerListener extends Thread{
 	 * @param mensagem
 	 */
 	public void sendAll(String mensagem) {
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss yyyy/MM/dd");
+		Date date = new Date();
+		
 		String mensagemFormatada = this.maquinaCliente.getIp()+
 				":"+
 				this.maquinaCliente.getPorta()+
 				"/~"+
 				this.maquinaCliente.getNome()+
 				":"+
-				mensagem
+				mensagem+
+				" "+dateFormat.format(date)
 				;
 		for (MaquinaCliente maquinaClienteOnline: this.maquinasClientes) {
 			try {

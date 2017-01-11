@@ -19,7 +19,7 @@ public class Cliente2 {
 			Listener lis = new Listener(s);
 			lis.start();
 			DataOutputStream dataOut = new DataOutputStream(s.getOutputStream());
-			System.out.println("Nano Mesenger V1.0 (Digite 0 pra sair)");
+			System.out.println("Mini Chat (Digite 'bye' pra sair)");
 			String outMsg = "";
 			do{
 				if(!s.isClosed()){
@@ -30,7 +30,7 @@ public class Cliente2 {
 				else{break;}
 			}while(!outMsg.equals("fim"));
 			s.close();
-			System.out.println("Conversa Finalizada!");
+			System.out.println("Chat Finalizado");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
