@@ -31,6 +31,7 @@ public class ServerListener extends Thread{
 				String dadosDoCliente = dataIn.readUTF();
 				String output[] = dadosDoCliente.split(" ");
 				String op = output[0];
+
 				switch(op){
 				case "bye":
 					msg = "fim";
@@ -42,14 +43,14 @@ public class ServerListener extends Thread{
 				case "list":
 					dataOutput.writeUTF(this.listarUsuarios());
 					break;
-					
+
 				case "rename":
 					if (output.length == 1) {
 						dataOutput.writeUTF("Insira um nome de usuário!");
 						break;
 					}
 					String nomeUsuario = dadosDoCliente.substring(7,dadosDoCliente.length());
-					
+
 					if (!nomeUsuario.trim().contains(" ")) {
 						dataOutput.writeUTF(this.renameUsuario(nomeUsuario));
 						break;
@@ -59,16 +60,12 @@ public class ServerListener extends Thread{
 						dataOutput.writeUTF("Nome de usuario invalido, favor remover espacos em branco que separa os nomes!");
 						break;
 					}
-					
+
 				case "send":
-					if (output.length == 1) {
-						dataOutput.writeUTF("Insira o comando '-all' ou '-user'!");
+					if (!this.validarEnvio(output)) {
 						break;
 					}
-					if (output.length == 2) {
-						dataOutput.writeUTF("Escreva uma mensagem!");
-						break;
-					}
+
 					if (dadosDoCliente.substring(5,9).equals("-all")) {
 						this.sendAll(dadosDoCliente.substring(10,dadosDoCliente.length()));
 						break;
@@ -83,7 +80,7 @@ public class ServerListener extends Thread{
 						this.sendUser(nome, mensagem);
 						break;
 					}
-					
+
 				default:
 					dataOutput.writeUTF("Comando inválido!");
 					break;
@@ -96,15 +93,63 @@ public class ServerListener extends Thread{
 		}
 	}
 
+	public boolean validarEnvio(String output[]) {
+		String mensagem = "";
+		DataOutputStream dataOutput;
+		try {
+
+			if (output.length == 1) {
+				dataOutput = new DataOutputStream(this.maquinaCliente.getSocketCliente().getOutputStream());
+				dataOutput.writeUTF("Insira o comando '-all' ou '-user'!");
+
+				return false;
+			}
+
+			if (!output[1].equals("-user") && !output[1].equals("-all")) {
+				dataOutput = new DataOutputStream(this.maquinaCliente.getSocketCliente().getOutputStream());
+				dataOutput.writeUTF("Insira o comando '-all' ou '-user'!");
+
+				return false;
+			}	
+
+			if (output.length == 2 && output[1].equals("-all")) {
+				dataOutput = new DataOutputStream(this.maquinaCliente.getSocketCliente().getOutputStream());
+				dataOutput.writeUTF("Escreva uma mensagem!");
+
+				return false;
+			}
+
+			if (output.length == 2 && output[1].equals("-user")) {
+				dataOutput = new DataOutputStream(this.maquinaCliente.getSocketCliente().getOutputStream());
+				dataOutput.writeUTF("Insira um nome de usuario online e a mensagem a ser enviada!");
+
+				return false;
+			}
+			if (output.length == 3 && output[1].equals("-user")) {
+				dataOutput = new DataOutputStream(this.maquinaCliente.getSocketCliente().getOutputStream());
+				dataOutput.writeUTF("Escreva uma mensagem!");
+
+				return false;
+			}	 
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return true;
+	}
+
 	/**
 	 * @author mayer
 	 * @return String
 	 */
-	public String listarUsuarios(){
+	public String listarUsuarios() {
 		String mensagem = "Usuarios Online:";
 
 		for(MaquinaCliente maquinaCliente: this.maquinasClientes) {
-			mensagem += "\n" + maquinaCliente.getNome();
+			
+			if (!this.maquinaCliente.equals(maquinaCliente)) {
+				mensagem += "\n" + maquinaCliente.getNome();
+			}
 		}
 
 		return mensagem;
@@ -152,7 +197,7 @@ public class ServerListener extends Thread{
 	}
 
 	public void sendUser(String nome, String mensagem) {
-		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss yyyy/MM/dd");
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy");
 		Date date = new Date();
 		String mensagemFormatada = this.maquinaCliente.getIp()+
 				":"+
@@ -169,6 +214,18 @@ public class ServerListener extends Thread{
 			try {
 				DataOutputStream dataOutput = new DataOutputStream(cliente.getSocketCliente().getOutputStream());
 				dataOutput.writeUTF(mensagemFormatada);
+				
+				dataOutput = new DataOutputStream(this.maquinaCliente.getSocketCliente().getOutputStream());
+				dataOutput.writeUTF("Mensagem enviada com sucesso!");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		if (cliente == null) {
+			try {
+				DataOutputStream dataOutput = new DataOutputStream(this.maquinaCliente.getSocketCliente().getOutputStream());
+				dataOutput.writeUTF("Este usuario não existe: " + nome );
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -182,9 +239,9 @@ public class ServerListener extends Thread{
 	 * @param mensagem
 	 */
 	public void sendAll(String mensagem) {
-		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss yyyy/MM/dd");
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy");
 		Date date = new Date();
-		
+
 		String mensagemFormatada = this.maquinaCliente.getIp()+
 				":"+
 				this.maquinaCliente.getPorta()+
@@ -199,6 +256,11 @@ public class ServerListener extends Thread{
 				if (!maquinaClienteOnline.equals(this.maquinaCliente)) {
 					DataOutputStream dataOutput = new DataOutputStream(maquinaClienteOnline.getSocketCliente().getOutputStream());
 					dataOutput.writeUTF(mensagemFormatada);
+				}
+
+				if (maquinaClienteOnline.equals(this.maquinaCliente)) {
+					DataOutputStream dataOutput = new DataOutputStream(maquinaClienteOnline.getSocketCliente().getOutputStream());
+					dataOutput.writeUTF("Mensagem enviada com sucesso!");
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

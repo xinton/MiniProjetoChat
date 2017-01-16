@@ -9,11 +9,11 @@ public class MaquinaCliente {
 	private String ip;
 	private int porta;
 
-	public MaquinaCliente(Socket socketCliente){
+	public MaquinaCliente(Socket socketCliente, int quantidadeUsuarios){
 		this.socketCliente = socketCliente;
-		this.nome = socketCliente.getInetAddress().getHostName();
+		this.nome = "localhost" + "[" + quantidadeUsuarios + "]";
 		this.ip = socketCliente.getInetAddress().getHostAddress();
-		this.porta = socketCliente.getLocalPort();
+		this.porta = socketCliente.getPort();
 	}
 	
 	

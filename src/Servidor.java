@@ -18,7 +18,7 @@ public class Servidor {
 			ServerSocket ss = new ServerSocket (6500);			
 			do{
 				Socket socket = ss.accept();
-				MaquinaCliente maquinaCliente = new MaquinaCliente(socket);
+				MaquinaCliente maquinaCliente = new MaquinaCliente(socket, maquinasClientesOnline.size());
 				maquinasClientesOnline.add(maquinaCliente);
 				ServerListener serverListener = new ServerListener(maquinaCliente, maquinasClientesOnline);
 				serverListener.start();
